@@ -7,3 +7,4 @@ dist/
 build/
 *.log
 coverage/
+node_modules/.prisma/
