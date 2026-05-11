@@ -1,2 +1,9 @@
 lista.md
 Trabajo practico devops.pdf
+
+node_modules/
+.env
+dist/
+build/
+*.log
+coverage/
