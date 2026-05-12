@@ -1,0 +1,45 @@
+services:
+  api:
+    build: .
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - .env
+    environment:
+      # Sobreescribe DATABASE_URL para usar la red interna de Compose
+      # (el host es el nombre del servicio "db", no localhost)
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/tareas
+      - NODE_ENV=production
+    # Ejecuta las migraciones pendientes antes de arrancar el servidor.
+    # Garantiza que el esquema de la DB esté sincronizado con el código
+    # en cada deploy, sin necesidad de intervención manual.
+    command: sh -c "npx prisma migrate deploy && node dist/server.js"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      # wget está disponible en Alpine por defecto (curl no viene incluido).
+      # -q silencia la salida; -O- redirige el cuerpo a stdout; --spider
+      # no descarga el cuerpo, solo verifica que el servidor responda 2xx.
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/salud || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tareas
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
