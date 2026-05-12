@@ -48,7 +48,7 @@ WORKDIR /app
 # Crea un grupo y usuario sin privilegios llamado "app".
 # Correr como root dentro del contenedor es un riesgo de seguridad:
 # si la app es comprometida, el atacante tendría acceso root al host.
-RUN addgroup -S app && adduser -S app -G app
+RUN apk add --no-cache openssl && addgroup -S app && adduser -S app -G app
 
 # Copia los manifiestos para instalar solo dependencias de producción.
 COPY package*.json ./
@@ -61,14 +61,18 @@ COPY prisma/ ./prisma/
 # --omit=dev reduce el tamaño de node_modules considerablemente.
 RUN npm ci --omit=dev
 
-# Regenera el cliente de Prisma en esta imagen de producción.
-# No se puede copiar desde el builder porque está ligado a la arquitectura
-# y binarios del sistema operativo de cada imagen.
-RUN npx prisma generate
+# Copia el cliente Prisma ya generado desde el builder (incluye el engine correcto
+# para linux-musl-openssl-3.0.x). Ambas etapas usan la misma imagen Alpine,
+# por lo que el binario es compatible.
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Copia el JavaScript compilado desde la etapa builder.
 # Este es el único código de la app que entra a la imagen final.
 COPY --from=builder /app/dist ./dist
+
+# Apunta explícitamente al engine musl+OpenSSL 3 para que Prisma no intente
+# detectar la versión de libssl en tiempo de ejecución.
+ENV PRISMA_QUERY_ENGINE_LIBRARY=/app/node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node
 
 # Cambia al usuario sin privilegios antes de arrancar el proceso.
 # A partir de acá, ningún comando ni el servidor corren como root.

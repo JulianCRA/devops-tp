@@ -59,6 +59,21 @@ describe('GET /tareas', () => {
     const res = await request(app).get('/tareas?estado=INVALIDO')
     expect(res.status).toBe(400)
   })
+
+  it('filtra por usuarioAsignado', async () => {
+    ;(repo.listarTareas as jest.Mock).mockResolvedValueOnce([tareaEjemplo])
+    const res = await request(app).get('/tareas?usuarioAsignado=admin')
+    expect(res.status).toBe(200)
+    expect(repo.listarTareas).toHaveBeenCalledWith(
+      expect.objectContaining({ usuarioAsignado: 'admin' }),
+    )
+  })
+
+  it('responde 500 si el repositorio lanza un error', async () => {
+    ;(repo.listarTareas as jest.Mock).mockRejectedValueOnce(new Error('DB error'))
+    const res = await request(app).get('/tareas')
+    expect(res.status).toBe(500)
+  })
 })
 
 // ─── GET /tareas/:id ─────────────────────────────────────────────────────────
@@ -75,6 +90,12 @@ describe('GET /tareas/:id', () => {
     ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(null)
     const res = await request(app).get('/tareas/no-existe')
     expect(res.status).toBe(404)
+  })
+
+  it('responde 500 si el repositorio lanza un error', async () => {
+    ;(repo.obtenerTareaPorId as jest.Mock).mockRejectedValueOnce(new Error('DB error'))
+    const res = await request(app).get('/tareas/uuid-001')
+    expect(res.status).toBe(500)
   })
 })
 
@@ -139,6 +160,136 @@ describe('POST /tareas', () => {
     })
     expect(res.status).toBe(400)
   })
+
+  it('responde 400 si la fechaEntrega no es una fecha válida', async () => {
+    const res = await request(app).post('/tareas').send({
+      titulo: 'Tarea',
+      descripcion: 'Descripción',
+      usuarioCreador: 'admin',
+      fechaEntrega: 'no-es-una-fecha',
+    })
+    expect(res.status).toBe(400)
+  })
+
+  it('responde 400 si la fechaEntrega es una fecha pasada', async () => {
+    const res = await request(app).post('/tareas').send({
+      titulo: 'Tarea',
+      descripcion: 'Descripción',
+      usuarioCreador: 'admin',
+      fechaEntrega: '2020-01-01T00:00:00.000Z',
+    })
+    expect(res.status).toBe(400)
+  })
+
+  it('responde 500 si el repositorio lanza un error', async () => {
+    ;(repo.crearTarea as jest.Mock).mockRejectedValueOnce(new Error('DB error'))
+    const res = await request(app).post('/tareas').send({
+      titulo: 'Tarea',
+      descripcion: 'Descripción',
+      usuarioCreador: 'admin',
+    })
+    expect(res.status).toBe(500)
+  })
+})
+
+// ─── PATCH /tareas/:id ────────────────────────────────────────────────────────
+
+describe('PATCH /tareas/:id', () => {
+  it('responde 200 actualizando titulo y descripcion', async () => {
+    const tareaActualizada = { ...tareaEjemplo, titulo: 'Nuevo título', descripcion: 'Nueva desc' }
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    ;(repo.actualizarTarea as jest.Mock).mockResolvedValueOnce(tareaActualizada)
+    const res = await request(app).patch('/tareas/uuid-001').send({
+      titulo: 'Nuevo título',
+      descripcion: 'Nueva desc',
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.titulo).toBe('Nuevo título')
+  })
+
+  it('responde 200 actualizando usuarioAsignado a null', async () => {
+    const tareaActualizada = { ...tareaEjemplo, usuarioAsignado: null }
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    ;(repo.actualizarTarea as jest.Mock).mockResolvedValueOnce(tareaActualizada)
+    const res = await request(app).patch('/tareas/uuid-001').send({ usuarioAsignado: null })
+    expect(res.status).toBe(200)
+  })
+
+  it('responde 200 actualizando fechaEntrega a null', async () => {
+    const tareaActualizada = { ...tareaEjemplo, fechaEntrega: null }
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    ;(repo.actualizarTarea as jest.Mock).mockResolvedValueOnce(tareaActualizada)
+    const res = await request(app).patch('/tareas/uuid-001').send({ fechaEntrega: null })
+    expect(res.status).toBe(200)
+  })
+
+  it('responde 200 actualizando fechaEntrega con una fecha futura válida', async () => {
+    const tareaActualizada = { ...tareaEjemplo, fechaEntrega: fechaFutura }
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    ;(repo.actualizarTarea as jest.Mock).mockResolvedValueOnce(tareaActualizada)
+    const res = await request(app).patch('/tareas/uuid-001').send({ fechaEntrega: fechaFutura })
+    expect(res.status).toBe(200)
+  })
+
+  it('responde 404 si la tarea no existe', async () => {
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(null)
+    const res = await request(app).patch('/tareas/no-existe').send({ titulo: 'X' })
+    expect(res.status).toBe(404)
+  })
+
+  it('responde 400 si el titulo está vacío', async () => {
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    const res = await request(app).patch('/tareas/uuid-001').send({ titulo: '   ' })
+    expect(res.status).toBe(400)
+  })
+
+  it('responde 400 si la descripcion está vacía', async () => {
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    const res = await request(app).patch('/tareas/uuid-001').send({ descripcion: '' })
+    expect(res.status).toBe(400)
+  })
+
+  it('responde 400 si la fechaEntrega no es una fecha válida', async () => {
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    const res = await request(app).patch('/tareas/uuid-001').send({ fechaEntrega: 'no-es-fecha' })
+    expect(res.status).toBe(400)
+  })
+
+  it('responde 400 si la fechaEntrega es una fecha pasada', async () => {
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    const res = await request(app).patch('/tareas/uuid-001').send({ fechaEntrega: '2020-01-01T00:00:00.000Z' })
+    expect(res.status).toBe(400)
+  })
+
+  it('responde 400 si la prioridad es inválida', async () => {
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    const res = await request(app).patch('/tareas/uuid-001').send({ prioridad: 'URGENTE' })
+    expect(res.status).toBe(400)
+  })
+
+  it('responde 200 actualizando con una prioridad válida', async () => {
+    const tareaActualizada = { ...tareaEjemplo, prioridad: 'ALTA' }
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    ;(repo.actualizarTarea as jest.Mock).mockResolvedValueOnce(tareaActualizada)
+    const res = await request(app).patch('/tareas/uuid-001').send({ prioridad: 'ALTA' })
+    expect(res.status).toBe(200)
+    expect(res.body.prioridad).toBe('ALTA')
+  })
+
+  it('responde 200 actualizando usuarioAsignado con un valor no nulo', async () => {
+    const tareaActualizada = { ...tareaEjemplo, usuarioAsignado: 'usuario1' }
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    ;(repo.actualizarTarea as jest.Mock).mockResolvedValueOnce(tareaActualizada)
+    const res = await request(app).patch('/tareas/uuid-001').send({ usuarioAsignado: 'usuario1' })
+    expect(res.status).toBe(200)
+    expect(res.body.usuarioAsignado).toBe('usuario1')
+  })
+
+  it('responde 500 si el repositorio lanza un error', async () => {
+    ;(repo.obtenerTareaPorId as jest.Mock).mockRejectedValueOnce(new Error('DB error'))
+    const res = await request(app).patch('/tareas/uuid-001').send({ titulo: 'X' })
+    expect(res.status).toBe(500)
+  })
 })
 
 // ─── PATCH /tareas/:id/estado ─────────────────────────────────────────────────
@@ -168,6 +319,12 @@ describe('PATCH /tareas/:id/estado', () => {
     const res = await request(app).patch('/tareas/no-existe/estado').send({ estado: 'COMPLETADA' })
     expect(res.status).toBe(404)
   })
+
+  it('responde 500 si el repositorio lanza un error', async () => {
+    ;(repo.obtenerTareaPorId as jest.Mock).mockRejectedValueOnce(new Error('DB error'))
+    const res = await request(app).patch('/tareas/uuid-001/estado').send({ estado: 'COMPLETADA' })
+    expect(res.status).toBe(500)
+  })
 })
 
 // ─── DELETE /tareas/:id ───────────────────────────────────────────────────────
@@ -184,5 +341,11 @@ describe('DELETE /tareas/:id', () => {
     ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(null)
     const res = await request(app).delete('/tareas/no-existe')
     expect(res.status).toBe(404)
+  })
+
+  it('responde 500 si el repositorio lanza un error', async () => {
+    ;(repo.obtenerTareaPorId as jest.Mock).mockRejectedValueOnce(new Error('DB error'))
+    const res = await request(app).delete('/tareas/uuid-001')
+    expect(res.status).toBe(500)
   })
 })
