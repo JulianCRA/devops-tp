@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",
-    "test": "jest --coverage --testPathPattern=tests/.*(?<!integration)\\.test\\.ts",
+    "test": "jest --coverage --testPathIgnorePatterns=integration",
     "test:integration": "jest --testPathPattern=tests/.*\\.integration\\.test\\.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
