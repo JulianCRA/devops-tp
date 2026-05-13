@@ -26,7 +26,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tareas_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Instalar dependencias
         run: npm ci
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Build de la imagen Docker
         run: docker build -t tareas-api:ci .
