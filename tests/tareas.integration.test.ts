@@ -41,7 +41,7 @@ describe('POST /tareas', () => {
     const enDb = await prisma.tarea.findUnique({ where: { id: res.body.id } })
     expect(enDb).not.toBeNull()
     expect(enDb!.titulo).toBe('Tarea integration')
-    expect(enDb!.estado).toBe('PENDIENTE') // default from schema
+    expect(enDb!.estado).toBe('PENDIENTEhehehehhe') // default from schema
   })
 
   it('responde 400 sin titulo', async () => {
