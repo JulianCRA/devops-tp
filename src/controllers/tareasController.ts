@@ -85,6 +85,7 @@ export async function crearTarea(req: Request, res: Response): Promise<void> {
       usuarioAsignado: usuarioAsignado as string | undefined,
     })
 
+    console.log(`Nueva tarea creada: "${tarea.titulo}" (id: ${tarea.id})`)
     res.status(201).json(tarea)
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
@@ -149,6 +150,7 @@ export async function actualizarTarea(req: Request, res: Response): Promise<void
     }
 
     const tareaActualizada = await repo.actualizarTarea(id, datos)
+    console.log(`Tarea modificada (id: ${id})`)
     res.status(200).json(tareaActualizada)
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
@@ -176,6 +178,7 @@ export async function cambiarEstado(req: Request, res: Response): Promise<void> 
     }
 
     const tareaActualizada = await repo.cambiarEstado(id, estado as Estado)
+    console.log(`Tarea ${id} cambió estado a: ${estado}`)
     res.status(200).json(tareaActualizada)
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
@@ -191,6 +194,7 @@ export async function eliminarTarea(req: Request, res: Response): Promise<void> 
       return
     }
     await repo.eliminarTarea(id)
+    console.log(`Tarea eliminada (id: ${id})`)
     res.status(204).send()
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
