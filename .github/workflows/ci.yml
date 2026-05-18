@@ -79,3 +79,20 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: publish
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Aplicar migraciones en producción
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy
+
+      - name: Desplegar en Render
+        run: curl -fsSL "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
