@@ -22,7 +22,8 @@
     "@prisma/client": "^5.22.0",
     "express": "^4.21.2",
     "prisma": "^5.22.0",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "winston-loki": "^6.1.4"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
