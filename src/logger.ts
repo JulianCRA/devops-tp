@@ -9,6 +9,7 @@ const lokiTransports = process.env.LOKI_URL
       json: true,
       format: format.json(),
       gracefulShutdown: false,
+      onConnectionError: (err: unknown) => console.error('[loki] connection error:', err),
     })]
   : []
 
