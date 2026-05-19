@@ -43,6 +43,7 @@ app.post('/alerta', (_req, res) => {
 
 app.post('/reset', async (_req, res) => {
   const { count } = await resetDB()
+  simulator.clearPool()
   logger.warn('Base de datos reseteada', { eliminadas: count })
   res.json({ eliminadas: count })
 })

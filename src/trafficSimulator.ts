@@ -144,3 +144,7 @@ export function stop() {
 export function isRunning() {
   return running
 }
+
+export function clearPool() {
+  idPool.length = 0
+}
