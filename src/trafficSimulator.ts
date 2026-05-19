@@ -8,12 +8,17 @@ let base = ''
 type Req = { url: string; method?: string; body?: Record<string, unknown> }
 const json = { 'Content-Type': 'application/json' }
 
-function buildStaticRequests(): Req[] {
+function buildNormalRequests(): Req[] {
   return [
     { url: base + '/salud' },
     { url: base + '/tareas' },
     { url: base + '/tareas/privada' },
     { url: base + '/tareas/administrativa' },
+  ]
+}
+
+function buildErrorRequests(): Req[] {
+  return [
     { url: base + '/tareas/id-inexistente' },
     { url: base + '/tareas', method: 'POST', body: {} },
     { url: base + '/tareas', method: 'POST', body: {
@@ -81,8 +86,8 @@ async function tick() {
     return
   }
 
-  const statics = buildStaticRequests()
-  const req = statics[Math.floor(Math.random() * statics.length)]
+  const pool = Math.random() < 0.2 ? buildErrorRequests() : buildNormalRequests()
+  const req = pool[Math.floor(Math.random() * pool.length)]
   fetch(req.url, {
     method: req.method ?? 'GET',
     headers: req.body ? json : undefined,
