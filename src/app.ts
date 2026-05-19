@@ -32,4 +32,12 @@ app.post('/trigger', (_req, res) => {
 app.use('/', saludRouter)
 app.use('/tareas', tareasRouter)
 
+// Endpoint manual para disparar una alerta en Grafana.
+// Llámalo con: POST /alerta-test
+// Filtrarlo en Grafana/Loki con: {level="error"} |= "ALERTA_MANUAL"
+app.post('/alerta-test', (_req, res) => {
+  logger.error('ALERTA_MANUAL', { alert_test: true })
+  res.status(200).json({ alerta: 'disparada' })
+})
+
 export default app
