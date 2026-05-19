@@ -27,6 +27,10 @@ async function tick() {
   const roll = Math.random()
 
   if (roll < 0.25) {
+    if (idPool.length >= 50) {
+      console.warn(`[${ts()}] Pool lleno (${idPool.length} tareas). Ignorando creación.`)
+      return
+    }
     try {
       const res = await fetch(`${base}/tareas`, {
         method: 'POST',
