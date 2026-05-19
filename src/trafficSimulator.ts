@@ -17,27 +17,6 @@ function buildNormalRequests(): Req[] {
   ]
 }
 
-function buildErrorRequests(): Req[] {
-  return [
-    // 400 — campo requerido faltante
-    { url: base + '/tareas', method: 'POST', body: {} },
-    // 400 — prioridad inválida
-    { url: base + '/tareas', method: 'POST', body: {
-      titulo: 'X', descripcion: 'X', usuarioCreador: 'X', prioridad: 'ULTRA',
-    }},
-    // 400 — estado inválido en query param
-    { url: base + '/tareas?estado=INVALIDO' },
-    // 401 — ruta protegida
-    { url: base + '/tareas/privada' },
-    // 403 — ruta prohibida
-    { url: base + '/tareas/administrativa' },
-    // 404 — ID inexistente
-    { url: base + '/tareas/00000000-0000-0000-0000-000000000000' },
-    // 500 — error forzado
-    { url: base + '/salud/error' },
-  ]
-}
-
 async function tick() {
   const roll = Math.random()
 
@@ -96,8 +75,8 @@ async function tick() {
     return
   }
 
-  const pool = Math.random() < 0.2 ? buildErrorRequests() : buildNormalRequests()
-  const req = pool[Math.floor(Math.random() * pool.length)]
+  const reqs = buildNormalRequests()
+  const req = reqs[Math.floor(Math.random() * reqs.length)]
   fetch(req.url, {
     method: req.method ?? 'GET',
     headers: req.body ? json : undefined,
