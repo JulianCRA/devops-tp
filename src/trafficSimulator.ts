@@ -1,7 +1,8 @@
 const ts = () => new Date().toLocaleTimeString('es-AR', { hour12: false })
 
 const idPool: string[] = []
-let timer: ReturnType<typeof setInterval> | null = null
+let timer: ReturnType<typeof setTimeout> | null = null
+let running = false
 let base = ''
 
 type Req = { url: string; method?: string; body?: Record<string, unknown> }
@@ -77,21 +78,42 @@ async function tick() {
   }).catch(() => { /* ignorar */ })
 }
 
+// delay aleatorio uniforme entre 1 y 20 segundos
+function randomDelay() {
+  return Math.floor(Math.random() * 19000) + 1000
+}
+
+function scheduleNext() {
+  if (!running) return
+  const delay = randomDelay()
+  timer = setTimeout(async () => {
+    // 25% burst (2-5 reqs concurrentes), 75% request única
+    if (Math.random() < 0.25) {
+      const count = Math.floor(Math.random() * 4) + 2  // 2-5
+      await Promise.all(Array.from({ length: count }, () => tick().catch(() => { /* ignorar */ })))
+    } else {
+      await tick().catch(() => { /* ignorar */ })
+    }
+    scheduleNext()
+  }, delay)
+}
+
 export function start(port: string | number) {
-  if (timer) return
+  if (running) return
   base = `http://localhost:${port}`
+  running = true
   console.log(`[${ts()}] Simulador de tráfico iniciado`)
-  timer = setInterval(() => { tick().catch(() => { /* ignorar */ }) }, 5000)
+  scheduleNext()
 }
 
 export function stop() {
-  if (!timer) return
-  clearInterval(timer)
-  timer = null
+  if (!running) return
+  running = false
+  if (timer) { clearTimeout(timer); timer = null }
   idPool.length = 0
   console.log(`[${ts()}] Simulador de tráfico detenido`)
 }
 
 export function isRunning() {
-  return timer !== null
+  return running
 }
