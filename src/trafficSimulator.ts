@@ -66,9 +66,12 @@ async function tick() {
         body: JSON.stringify({ estado: 'EN_PROGRESO' }),
       }).catch(() => { /* ignorar */ })
     } else {
-      await fetch(`${base}/tareas/${id}`, { method: 'DELETE' })
-        .catch(() => { /* ignorar */ })
-      idPool.splice(idx, 1)
+      const res = await fetch(`${base}/tareas/${id}`, { method: 'DELETE' })
+        .catch(() => null)
+      if (res?.ok) {
+        const current = idPool.indexOf(id)
+        if (current !== -1) idPool.splice(current, 1)
+      }
     }
     return
   }
