@@ -1,6 +1,7 @@
 import express from 'express'
 import tareasRouter from './routes/tareasRoutes'
 import saludRouter from './routes/saludRoutes'
+import * as simulator from './trafficSimulator'
 
 const app = express()
 const ts = () => new Date().toLocaleTimeString('es-AR', { hour12: false })
@@ -18,6 +19,15 @@ app.use('/tareas/administrativa', (_req, res) => {
   res.status(403).json({ error: 'Prohibido (403)' })
 })
 
+app.post('/trigger', (req, res) => {
+  const port = req.app.get('port') ?? 3000
+  if (simulator.isRunning()) {
+    simulator.stop()
+  } else {
+    simulator.start(port)
+  }
+  res.json({ simulador: simulator.isRunning() ? 'activo' : 'detenido' })
+})
 
 app.use('/', saludRouter)
 app.use('/tareas', tareasRouter)
