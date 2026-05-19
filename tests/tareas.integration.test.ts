@@ -191,6 +191,166 @@ describe('DELETE /tareas/:id', () => {
   })
 })
 
+// ─── PATCH /tareas/:id ────────────────────────────────────────────────────────
+
+describe('PATCH /tareas/:id', () => {
+  it('actualiza el titulo y lo persiste en la DB', async () => {
+    const tarea = await prisma.tarea.create({
+      data: { titulo: 'Original', descripcion: 'd', usuarioCreador: 'x' },
+    })
+
+    const res = await request(app)
+      .patch(`/tareas/${tarea.id}`)
+      .send({ titulo: 'Actualizado' })
+
+    expect(res.status).toBe(200)
+    expect(res.body.titulo).toBe('Actualizado')
+
+    const enDb = await prisma.tarea.findUnique({ where: { id: tarea.id } })
+    expect(enDb!.titulo).toBe('Actualizado')
+  })
+
+  it('actualiza la descripcion y la persiste en la DB', async () => {
+    const tarea = await prisma.tarea.create({
+      data: { titulo: 'T', descripcion: 'original', usuarioCreador: 'x' },
+    })
+
+    const res = await request(app)
+      .patch(`/tareas/${tarea.id}`)
+      .send({ descripcion: 'nueva descripcion' })
+
+    expect(res.status).toBe(200)
+
+    const enDb = await prisma.tarea.findUnique({ where: { id: tarea.id } })
+    expect(enDb!.descripcion).toBe('nueva descripcion')
+  })
+
+  it('actualiza la prioridad y la persiste en la DB', async () => {
+    const tarea = await prisma.tarea.create({
+      data: { titulo: 'T', descripcion: 'd', usuarioCreador: 'x', prioridad: 'BAJA' },
+    })
+
+    const res = await request(app)
+      .patch(`/tareas/${tarea.id}`)
+      .send({ prioridad: 'ALTA' })
+
+    expect(res.status).toBe(200)
+
+    const enDb = await prisma.tarea.findUnique({ where: { id: tarea.id } })
+    expect(enDb!.prioridad).toBe('ALTA')
+  })
+
+  it('asigna un usuario y lo persiste en la DB', async () => {
+    const tarea = await prisma.tarea.create({
+      data: { titulo: 'T', descripcion: 'd', usuarioCreador: 'x' },
+    })
+
+    const res = await request(app)
+      .patch(`/tareas/${tarea.id}`)
+      .send({ usuarioAsignado: 'juan' })
+
+    expect(res.status).toBe(200)
+
+    const enDb = await prisma.tarea.findUnique({ where: { id: tarea.id } })
+    expect(enDb!.usuarioAsignado).toBe('juan')
+  })
+
+  it('limpia el usuarioAsignado a null y lo persiste en la DB', async () => {
+    const tarea = await prisma.tarea.create({
+      data: { titulo: 'T', descripcion: 'd', usuarioCreador: 'x', usuarioAsignado: 'juan' },
+    })
+
+    const res = await request(app)
+      .patch(`/tareas/${tarea.id}`)
+      .send({ usuarioAsignado: null })
+
+    expect(res.status).toBe(200)
+
+    const enDb = await prisma.tarea.findUnique({ where: { id: tarea.id } })
+    expect(enDb!.usuarioAsignado).toBeNull()
+  })
+
+  it('responde 404 para id inexistente', async () => {
+    const res = await request(app)
+      .patch('/tareas/id-que-no-existe')
+      .send({ titulo: 'X' })
+    expect(res.status).toBe(404)
+  })
+
+  it('responde 400 si el titulo está vacío', async () => {
+    const tarea = await prisma.tarea.create({
+      data: { titulo: 'T', descripcion: 'd', usuarioCreador: 'x' },
+    })
+
+    const res = await request(app)
+      .patch(`/tareas/${tarea.id}`)
+      .send({ titulo: '   ' })
+
+    expect(res.status).toBe(400)
+  })
+
+  it('responde 400 si la prioridad es inválida', async () => {
+    const tarea = await prisma.tarea.create({
+      data: { titulo: 'T', descripcion: 'd', usuarioCreador: 'x' },
+    })
+
+    const res = await request(app)
+      .patch(`/tareas/${tarea.id}`)
+      .send({ prioridad: 'URGENTE' })
+
+    expect(res.status).toBe(400)
+  })
+})
+
+// ─── POST /tareas — campos opcionales ─────────────────────────────────────────
+
+describe('POST /tareas — campos opcionales', () => {
+  const fechaFutura = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+
+  it('persiste la prioridad cuando se envía', async () => {
+    const res = await request(app).post('/tareas').send({
+      titulo: 'Con prioridad',
+      descripcion: 'Descripción',
+      usuarioCreador: 'admin',
+      prioridad: 'ALTA',
+    })
+
+    expect(res.status).toBe(201)
+
+    const enDb = await prisma.tarea.findUnique({ where: { id: res.body.id } })
+    expect(enDb!.prioridad).toBe('ALTA')
+  })
+
+  it('persiste el usuarioAsignado cuando se envía', async () => {
+    const res = await request(app).post('/tareas').send({
+      titulo: 'Con asignado',
+      descripcion: 'Descripción',
+      usuarioCreador: 'admin',
+      usuarioAsignado: 'maria',
+    })
+
+    expect(res.status).toBe(201)
+
+    const enDb = await prisma.tarea.findUnique({ where: { id: res.body.id } })
+    expect(enDb!.usuarioAsignado).toBe('maria')
+  })
+
+  it('persiste la fechaEntrega cuando se envía', async () => {
+    const res = await request(app).post('/tareas').send({
+      titulo: 'Con fecha',
+      descripcion: 'Descripción',
+      usuarioCreador: 'admin',
+      fechaEntrega: fechaFutura,
+    })
+
+    expect(res.status).toBe(201)
+
+    const enDb = await prisma.tarea.findUnique({ where: { id: res.body.id } })
+    expect(enDb!.fechaEntrega).not.toBeNull()
+    expect(new Date(enDb!.fechaEntrega!).toISOString()).toBe(new Date(fechaFutura).toISOString())
+  })
+})
+
 // ─── GET /listo ───────────────────────────────────────────────────────────────
 
 describe('GET /listo', () => {
