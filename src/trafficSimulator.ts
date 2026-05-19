@@ -1,4 +1,4 @@
-const ts = () => new Date().toLocaleTimeString('es-AR', { hour12: false })
+import logger from './logger'
 
 const idPool: string[] = []
 let timer: ReturnType<typeof setTimeout> | null = null
@@ -28,7 +28,7 @@ async function tick() {
 
   if (roll < 0.25) {
     if (idPool.length >= 200) {
-      console.warn(`[${ts()}] Pool lleno (${idPool.length} tareas). Ignorando creación.`)
+      logger.warn('Pool lleno, ignorando creación', { size: idPool.length })
       return
     }
     try {
@@ -114,14 +114,14 @@ export async function start(port: string | number) {
   if (running) return
   base = `http://localhost:${port}`
   running = true
-  console.log(`[${ts()}] Simulador de tráfico iniciado`)
+  logger.info('Simulador de tráfico iniciado')
   try {
     const res = await fetch(`${base}/tareas`)
     if (res.ok) {
       const tareas = await res.json() as { id: string }[]
       const ids = tareas.slice(0, 200).map((t) => t.id)
       idPool.push(...ids)
-      console.log(`[${ts()}] Pool inicializado con ${idPool.length} tareas existentes`)
+      logger.info('Pool inicializado', { tareas: idPool.length })
     }
   } catch { /* ignorar */ }
   scheduleNext()
@@ -132,7 +132,7 @@ export function stop() {
   running = false
   if (timer) { clearTimeout(timer); timer = null }
   idPool.length = 0
-  console.log(`[${ts()}] Simulador de tráfico detenido`)
+  logger.info('Simulador de tráfico detenido')
 }
 
 export function isRunning() {

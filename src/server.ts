@@ -1,10 +1,10 @@
 import './instrumentation'
 import app from './app'
 import * as simulator from './trafficSimulator'
+import logger from './logger'
 
 const PORT = process.env.PORT ?? 3000
-const ts = () => new Date().toLocaleTimeString('es-AR', { hour12: false })
 
 app.listen(PORT, () => {
-  console.log(`[${ts()}] Servidor corriendo en el puerto ${PORT}`)
+  logger.info('Servidor corriendo', { port: PORT })
 })
