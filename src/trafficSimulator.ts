@@ -5,6 +5,23 @@ let timer: ReturnType<typeof setTimeout> | null = null
 let running = false
 let base = ''
 
+const VERBOS   = ['Implementar', 'Revisar', 'Migrar', 'Documentar', 'Optimizar', 'Refactorizar', 'Desplegar', 'Testear', 'Configurar', 'Analizar']
+const OBJETOS  = ['autenticación', 'pipeline de CI', 'base de datos', 'caché de Redis', 'logs de auditoría', 'API de pagos', 'servicio de emails', 'dashboard de métricas', 'módulo de reportes', 'integración con S3']
+const USUARIOS = ['ana.garcia', 'carlos.lopez', 'maria.torres', 'pedro.ruiz', 'lucia.fernandez', 'simulador']
+
+function randomItem<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+function buildTarea() {
+  return {
+    titulo: `${randomItem(VERBOS)} ${randomItem(OBJETOS)}`,
+    descripcion: `Tarea generada automáticamente por el simulador de tráfico.`,
+    usuarioCreador: randomItem(USUARIOS),
+    prioridad: randomItem(['BAJA', 'MEDIA', 'ALTA']),
+  }
+}
+
 type Req = { url: string; method?: string; body?: Record<string, unknown> }
 const json = { 'Content-Type': 'application/json' }
 
@@ -29,12 +46,7 @@ async function tick() {
       const res = await fetch(`${base}/tareas`, {
         method: 'POST',
         headers: json,
-        body: JSON.stringify({
-          titulo: 'Tarea simulada',
-          descripcion: 'Descripción de prueba',
-          usuarioCreador: 'simulador',
-          prioridad: 'MEDIA',
-        }),
+        body: JSON.stringify(buildTarea()),
       })
       if (res.ok) {
         const tarea = await res.json() as { id: string }
