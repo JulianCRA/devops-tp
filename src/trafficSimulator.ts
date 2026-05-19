@@ -55,23 +55,28 @@ async function tick() {
     const id = idPool[idx]
     const action = Math.random()
 
+    const evict = () => {
+      const current = idPool.indexOf(id)
+      if (current !== -1) idPool.splice(current, 1)
+    }
+
     if (action < 0.33) {
-      await fetch(`${base}/tareas/${id}`, {
+      const res = await fetch(`${base}/tareas/${id}`, {
         method: 'PATCH', headers: json,
         body: JSON.stringify({ titulo: 'Tarea actualizada' }),
-      }).catch(() => { /* ignorar */ })
+      }).catch(() => null)
+      if (res?.status === 404) evict()
     } else if (action < 0.66) {
-      await fetch(`${base}/tareas/${id}/estado`, {
+      const res = await fetch(`${base}/tareas/${id}/estado`, {
         method: 'PATCH', headers: json,
         body: JSON.stringify({ estado: 'EN_PROGRESO' }),
-      }).catch(() => { /* ignorar */ })
+      }).catch(() => null)
+      if (res?.status === 404) evict()
     } else {
       const res = await fetch(`${base}/tareas/${id}`, { method: 'DELETE' })
         .catch(() => null)
-      if (res?.ok) {
-        const current = idPool.indexOf(id)
-        if (current !== -1) idPool.splice(current, 1)
-      }
+      if (res?.ok) evict()
+      else if (res?.status === 404) evict()
     }
     return
   }
