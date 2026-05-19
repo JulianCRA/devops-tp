@@ -27,7 +27,7 @@ async function tick() {
   const roll = Math.random()
 
   if (roll < 0.25) {
-    if (idPool.length >= 50) {
+    if (idPool.length >= 200) {
       console.warn(`[${ts()}] Pool lleno (${idPool.length} tareas). Ignorando creación.`)
       return
     }
@@ -105,11 +105,20 @@ function scheduleNext() {
   }, delay)
 }
 
-export function start(port: string | number) {
+export async function start(port: string | number) {
   if (running) return
   base = `http://localhost:${port}`
   running = true
   console.log(`[${ts()}] Simulador de tráfico iniciado`)
+  try {
+    const res = await fetch(`${base}/tareas`)
+    if (res.ok) {
+      const tareas = await res.json() as { id: string }[]
+      const ids = tareas.slice(0, 200).map((t) => t.id)
+      idPool.push(...ids)
+      console.log(`[${ts()}] Pool inicializado con ${idPool.length} tareas existentes`)
+    }
+  } catch { /* ignorar */ }
   scheduleNext()
 }
 
