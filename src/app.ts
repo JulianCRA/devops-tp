@@ -19,8 +19,8 @@ app.use('/tareas/administrativa', (_req, res) => {
   res.status(403).json({ error: 'Prohibido (403)' })
 })
 
-app.post('/trigger', (req, res) => {
-  const port = req.app.get('port') ?? 3000
+app.post('/trigger', (_req, res) => {
+  const port = process.env.PORT ?? 3000
   if (simulator.isRunning()) {
     simulator.stop()
   } else {
