@@ -10,21 +10,15 @@ app.listen(PORT, () => {
   const base = `http://localhost:${PORT}`
   const json = { 'Content-Type': 'application/json' }
 
+  // Pool de IDs reales creados por el simulador
+  const idPool: string[] = []
+
   type Req = { url: string; method?: string; body?: Record<string, unknown> }
 
-  const requests: Req[] = [
+  const staticRequests: Req[] = [
     // 2xx
     { url: base + '/salud' },
     { url: base + '/tareas' },
-    { url: base + '/tareas', method: 'POST', body: {
-      titulo: 'Tarea simulada',
-      descripcion: 'Descripción de prueba',
-      usuarioCreador: 'simulador',
-      prioridad: 'MEDIA',
-    }},
-    { url: base + '/tareas/id-simulado', method: 'PATCH', body: { titulo: 'Tarea actualizada' } },
-    { url: base + '/tareas/id-simulado/estado', method: 'PATCH', body: { estado: 'EN_PROGRESO' } },
-    { url: base + '/tareas/id-simulado', method: 'DELETE' },
     // 4xx
     { url: base + '/tareas/privada' },                          // 401
     { url: base + '/tareas/administrativa' },                   // 403
@@ -37,12 +31,65 @@ app.listen(PORT, () => {
     { url: base + '/salud/error' },
   ]
 
-  setInterval(() => {
-    const req = requests[Math.floor(Math.random() * requests.length)]
+  async function tick() {
+    const roll = Math.random()
+
+    // 25 %: crear tarea real y guardar el ID
+    if (roll < 0.25) {
+      try {
+        const res = await fetch(`${base}/tareas`, {
+          method: 'POST',
+          headers: json,
+          body: JSON.stringify({
+            titulo: 'Tarea simulada',
+            descripcion: 'Descripción de prueba',
+            usuarioCreador: 'simulador',
+            prioridad: 'MEDIA',
+          }),
+        })
+        if (res.ok) {
+          const tarea = await res.json() as { id: string }
+          idPool.push(tarea.id)
+        }
+      } catch { /* ignorar */ }
+      return
+    }
+
+    // 35 %: operar sobre un ID real del pool (si hay)
+    if (roll < 0.60 && idPool.length > 0) {
+      const idx = Math.floor(Math.random() * idPool.length)
+      const id = idPool[idx]
+      const action = Math.random()
+
+      if (action < 0.33) {
+        // PATCH titulo
+        await fetch(`${base}/tareas/${id}`, {
+          method: 'PATCH', headers: json,
+          body: JSON.stringify({ titulo: 'Tarea actualizada' }),
+        }).catch(() => { /* ignorar */ })
+      } else if (action < 0.66) {
+        // PATCH estado
+        await fetch(`${base}/tareas/${id}/estado`, {
+          method: 'PATCH', headers: json,
+          body: JSON.stringify({ estado: 'EN_PROGRESO' }),
+        }).catch(() => { /* ignorar */ })
+      } else {
+        // DELETE — sacar del pool
+        await fetch(`${base}/tareas/${id}`, { method: 'DELETE' })
+          .catch(() => { /* ignorar */ })
+        idPool.splice(idx, 1)
+      }
+      return
+    }
+
+    // resto: request estática aleatoria
+    const req = staticRequests[Math.floor(Math.random() * staticRequests.length)]
     fetch(req.url, {
       method: req.method ?? 'GET',
       headers: req.body ? json : undefined,
       body: req.body ? JSON.stringify(req.body) : undefined,
-    }).catch(() => {/* errores de red se ignoran */})
-  }, 5000)
+    }).catch(() => { /* ignorar */ })
+  }
+
+  setInterval(() => { tick().catch(() => { /* ignorar */ }) }, 5000)
 })
