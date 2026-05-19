@@ -33,7 +33,7 @@ app.use('/', saludRouter)
 app.use('/tareas', tareasRouter)
 
 // Endpoint manual para disparar una alerta en Grafana.
-app.post('/alerta-test', (_req, res) => {
+app.post('/alerta', (_req, res) => {
   logger.error('ALERTA_MANUAL', { alert_test: true })
   res.status(200).json({ alerta: 'disparada' })
 })
