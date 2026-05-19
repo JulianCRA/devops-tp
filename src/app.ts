@@ -1,6 +1,7 @@
 import express from 'express'
 import tareasRouter from './routes/tareasRoutes'
 import saludRouter from './routes/saludRoutes'
+import errorRouter from './routes/errorRoutes'
 import * as simulator from './trafficSimulator'
 import logger from './logger'
 
@@ -31,6 +32,7 @@ app.post('/trigger', (_req, res) => {
 
 app.use('/', saludRouter)
 app.use('/tareas', tareasRouter)
+app.use('/error', errorRouter)
 
 // Endpoint manual para disparar una alerta en Grafana.
 app.post('/alerta', (_req, res) => {

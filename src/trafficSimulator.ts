@@ -19,11 +19,21 @@ function buildNormalRequests(): Req[] {
 
 function buildErrorRequests(): Req[] {
   return [
-    { url: base + '/tareas/id-inexistente' },
+    // 400 — campo requerido faltante
     { url: base + '/tareas', method: 'POST', body: {} },
+    // 400 — prioridad inválida
     { url: base + '/tareas', method: 'POST', body: {
       titulo: 'X', descripcion: 'X', usuarioCreador: 'X', prioridad: 'ULTRA',
     }},
+    // 400 — estado inválido en query param
+    { url: base + '/tareas?estado=INVALIDO' },
+    // 401 — ruta protegida
+    { url: base + '/tareas/privada' },
+    // 403 — ruta prohibida
+    { url: base + '/tareas/administrativa' },
+    // 404 — ID inexistente
+    { url: base + '/tareas/00000000-0000-0000-0000-000000000000' },
+    // 500 — error forzado
     { url: base + '/salud/error' },
   ]
 }
