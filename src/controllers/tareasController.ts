@@ -53,14 +53,17 @@ export async function crearTarea(req: Request, res: Response): Promise<void> {
     const { titulo, descripcion, usuarioCreador, fechaEntrega, prioridad, usuarioAsignado } = req.body
 
     if (!titulo || typeof titulo !== 'string' || titulo.trim() === '') {
+      console.warn(`[${ts()}] crearTarea 400: titulo obligatorio`)
       res.status(400).json({ error: 'titulo es obligatorio' })
       return
     }
     if (!descripcion || typeof descripcion !== 'string' || descripcion.trim() === '') {
+      console.warn(`[${ts()}] crearTarea 400: descripcion obligatoria`)
       res.status(400).json({ error: 'descripcion es obligatoria' })
       return
     }
     if (!usuarioCreador || typeof usuarioCreador !== 'string' || usuarioCreador.trim() === '') {
+      console.warn(`[${ts()}] crearTarea 400: usuarioCreador obligatorio`)
       res.status(400).json({ error: 'usuarioCreador es obligatorio' })
       return
     }
@@ -79,6 +82,7 @@ export async function crearTarea(req: Request, res: Response): Promise<void> {
     }
 
     if (prioridad !== undefined && !PRIORIDADES_VALIDAS.includes(prioridad as Prioridad)) {
+      console.warn(`[${ts()}] crearTarea 400: prioridad inválida "${prioridad}"`)
       res.status(400).json({ error: `prioridad inválida. Valores permitidos: ${PRIORIDADES_VALIDAS.join(', ')}` })
       return
     }
@@ -105,6 +109,7 @@ export async function actualizarTarea(req: Request, res: Response): Promise<void
   try {
     const tarea = await repo.obtenerTareaPorId(id)
     if (!tarea) {
+      console.warn(`[${ts()}] actualizarTarea 404: tarea no encontrada (id: ${id})`)
       res.status(404).json({ error: 'Tarea no encontrada' })
       return
     }
@@ -182,6 +187,7 @@ export async function cambiarEstado(req: Request, res: Response): Promise<void> 
 
     const tarea = await repo.obtenerTareaPorId(id)
     if (!tarea) {
+      console.warn(`[${ts()}] cambiarEstado 404: tarea no encontrada (id: ${id})`)
       res.status(404).json({ error: 'Tarea no encontrada' })
       return
     }
@@ -200,6 +206,7 @@ export async function eliminarTarea(req: Request, res: Response): Promise<void> 
   try {
     const tarea = await repo.obtenerTareaPorId(id)
     if (!tarea) {
+      console.warn(`[${ts()}] eliminarTarea 404: tarea no encontrada (id: ${id})`)
       res.status(404).json({ error: 'Tarea no encontrada' })
       return
     }
