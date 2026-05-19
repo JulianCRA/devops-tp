@@ -51,6 +51,10 @@ async function eliminarTarea(id: string) {
   return prisma.tarea.delete({ where: { id } })
 }
 
+export async function resetDB() {
+  return prisma.tarea.deleteMany()
+}
+
 async function verificarConexion() {
   await prisma.$queryRaw`SELECT 1`
 }

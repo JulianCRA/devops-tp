@@ -1,7 +1,9 @@
 import express from 'express'
 import tareasRouter from './routes/tareasRoutes'
 import saludRouter from './routes/saludRoutes'
+import errorRouter from './routes/errorRoutes'
 import * as simulator from './trafficSimulator'
+import { resetDB } from './repositories/tareasRepository'
 import logger from './logger'
 
 const app = express()
@@ -31,11 +33,19 @@ app.post('/trigger', (_req, res) => {
 
 app.use('/', saludRouter)
 app.use('/tareas', tareasRouter)
+app.use('/error', errorRouter)
 
 // Endpoint manual para disparar una alerta en Grafana.
 app.post('/alerta', (_req, res) => {
   logger.error('ALERTA_MANUAL', { alert_test: true })
   res.status(200).json({ alerta: 'disparada' })
+})
+
+app.post('/reset', async (_req, res) => {
+  const { count } = await resetDB()
+  simulator.clearPool()
+  logger.warn('Base de datos reseteada', { eliminadas: count })
+  res.json({ eliminadas: count })
 })
 
 export default app
