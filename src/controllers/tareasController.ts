@@ -24,6 +24,7 @@ export async function listarTareas(req: Request, res: Response): Promise<void> {
       usuarioAsignado: usuarioAsignado as string | undefined,
     })
 
+    console.log(`[${ts()}] Tareas listadas (total: ${tareas.length})`)
     res.status(200).json(tareas)
   } catch (err) {
     console.error(`[${ts()}] Error en listarTareas:`, err)
@@ -35,9 +36,11 @@ export async function obtenerTarea(req: Request, res: Response): Promise<void> {
   try {
     const tarea = await repo.obtenerTareaPorId(String(req.params.id))
     if (!tarea) {
+      console.warn(`[${ts()}] Tarea no encontrada (id: ${req.params.id})`)
       res.status(404).json({ error: 'Tarea no encontrada' })
       return
     }
+    console.log(`[${ts()}] Tarea obtenida (id: ${tarea.id})`)
     res.status(200).json(tarea)
   } catch (err) {
     console.error(`[${ts()}] Error en obtenerTarea:`, err)
