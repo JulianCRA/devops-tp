@@ -29,8 +29,6 @@ function buildNormalRequests(): Req[] {
   return [
     { url: base + '/salud' },
     { url: base + '/tareas' },
-    { url: base + '/tareas/privada' },
-    { url: base + '/tareas/administrativa' },
   ]
 }
 
