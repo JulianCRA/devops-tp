@@ -8,11 +8,11 @@ app.use(express.json())
 
 /* simular errores 401 y 403 en rutas específicas */
 app.use('/tareas/privada', (_req, res) => {
-  res.status(401).json({ error: 'No autorizado' })
+  res.status(401).json({ error: 'No autorizado (401)' })
 })
 
 app.use('/tareas/administrativa', (_req, res) => {
-  res.status(403).json({ error: 'Prohibido' })
+  res.status(403).json({ error: 'Prohibido (403)' })
 })
 
 
