@@ -2,9 +2,10 @@ import './instrumentation'
 import app from './app'
 
 const PORT = process.env.PORT ?? 3000
+const ts = () => new Date().toLocaleTimeString('es-AR', { hour12: false })
 
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`)
+  console.log(`[${ts()}] Servidor corriendo en el puerto ${PORT}`)
 
   const base = `http://localhost:${PORT}`
   const json = { 'Content-Type': 'application/json' }

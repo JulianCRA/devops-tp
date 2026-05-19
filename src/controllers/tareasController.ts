@@ -2,6 +2,8 @@ import { Request, Response, RequestHandler } from 'express'
 import { Estado, Prioridad } from '@prisma/client'
 import repo from '../repositories/tareasRepository'
 
+const ts = () => new Date().toLocaleTimeString('es-AR', { hour12: false })
+
 type IdParam = { id: string }
 
 const ESTADOS_VALIDOS = Object.values(Estado)
@@ -23,7 +25,8 @@ export async function listarTareas(req: Request, res: Response): Promise<void> {
     })
 
     res.status(200).json(tareas)
-  } catch {
+  } catch (err) {
+    console.error(`[${ts()}] Error en listarTareas:`, err)
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 }
@@ -36,7 +39,8 @@ export async function obtenerTarea(req: Request, res: Response): Promise<void> {
       return
     }
     res.status(200).json(tarea)
-  } catch {
+  } catch (err) {
+    console.error(`[${ts()}] Error en obtenerTarea:`, err)
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 }
@@ -85,16 +89,17 @@ export async function crearTarea(req: Request, res: Response): Promise<void> {
       usuarioAsignado: usuarioAsignado as string | undefined,
     })
 
-    console.log(`Nueva tarea creada: "${tarea.titulo}" (id: ${tarea.id})`)
+    console.log(`[${ts()}] Nueva tarea creada: "${tarea.titulo}" (id: ${tarea.id})`)
     res.status(201).json(tarea)
-  } catch {
+  } catch (err) {
+    console.error(`[${ts()}] Error en crearTarea:`, err)
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 }
 
 export async function actualizarTarea(req: Request, res: Response): Promise<void> {
+  const id = String(req.params.id)
   try {
-    const id = String(req.params.id)
     const tarea = await repo.obtenerTareaPorId(id)
     if (!tarea) {
       res.status(404).json({ error: 'Tarea no encontrada' })
@@ -150,17 +155,18 @@ export async function actualizarTarea(req: Request, res: Response): Promise<void
     }
 
     const tareaActualizada = await repo.actualizarTarea(id, datos)
-    console.log(`Tarea modificada (id: ${id})`)
+    console.log(`[${ts()}] Tarea modificada (id: ${id})`)
     res.status(200).json(tareaActualizada)
-  } catch {
+  } catch (err) {
+    console.error(`[${ts()}] Error en actualizarTarea (id: ${id}):`, err)
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 }
 
 export async function cambiarEstado(req: Request, res: Response): Promise<void> {
+  const id = String(req.params.id)
   try {
     const { estado } = req.body
-    const id = String(req.params.id)
 
     if (!estado) {
       res.status(400).json({ error: 'estado es obligatorio' })
@@ -178,25 +184,27 @@ export async function cambiarEstado(req: Request, res: Response): Promise<void> 
     }
 
     const tareaActualizada = await repo.cambiarEstado(id, estado as Estado)
-    console.log(`Tarea ${id} cambió estado a: ${estado}`)
+    console.log(`[${ts()}] Tarea ${id} cambió estado a: ${estado}`)
     res.status(200).json(tareaActualizada)
-  } catch {
+  } catch (err) {
+    console.error(`[${ts()}] Error en cambiarEstado (id: ${id}):`, err)
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 }
 
 export async function eliminarTarea(req: Request, res: Response): Promise<void> {
+  const id = String(req.params.id)
   try {
-    const id = String(req.params.id)
     const tarea = await repo.obtenerTareaPorId(id)
     if (!tarea) {
       res.status(404).json({ error: 'Tarea no encontrada' })
       return
     }
     await repo.eliminarTarea(id)
-    console.log(`Tarea eliminada (id: ${id})`)
+    console.log(`[${ts()}] Tarea eliminada (id: ${id})`)
     res.status(204).send()
-  } catch {
+  } catch (err) {
+    console.error(`[${ts()}] Error en eliminarTarea (id: ${id}):`, err)
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 }
