@@ -349,3 +349,56 @@ describe('DELETE /tareas/:id', () => {
     expect(res.status).toBe(500)
   })
 })
+
+// ─── POST /tareas — strings con solo espacios ─────────────────────────────────
+
+describe('POST /tareas — whitespace-only strings', () => {
+  it('responde 400 si el titulo contiene solo espacios', async () => {
+    const res = await request(app).post('/tareas').send({
+      titulo: '   ',
+      descripcion: 'Descripción',
+      usuarioCreador: 'admin',
+    })
+    expect(res.status).toBe(400)
+  })
+
+  it('responde 400 si la descripcion contiene solo espacios', async () => {
+    const res = await request(app).post('/tareas').send({
+      titulo: 'Tarea',
+      descripcion: '   ',
+      usuarioCreador: 'admin',
+    })
+    expect(res.status).toBe(400)
+  })
+
+  it('responde 400 si el usuarioCreador contiene solo espacios', async () => {
+    const res = await request(app).post('/tareas').send({
+      titulo: 'Tarea',
+      descripcion: 'Descripción',
+      usuarioCreador: '   ',
+    })
+    expect(res.status).toBe(400)
+  })
+})
+
+// ─── PATCH /tareas/:id — 500 cuando actualizarTarea lanza error ───────────────
+
+describe('PATCH /tareas/:id — error en actualizarTarea', () => {
+  it('responde 500 si actualizarTarea lanza un error tras encontrar la tarea', async () => {
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    ;(repo.actualizarTarea as jest.Mock).mockRejectedValueOnce(new Error('DB error'))
+    const res = await request(app).patch('/tareas/uuid-001').send({ titulo: 'Nuevo' })
+    expect(res.status).toBe(500)
+  })
+})
+
+// ─── PATCH /tareas/:id/estado — 500 cuando cambiarEstado lanza error ──────────
+
+describe('PATCH /tareas/:id/estado — error en cambiarEstado', () => {
+  it('responde 500 si cambiarEstado lanza un error tras encontrar la tarea', async () => {
+    ;(repo.obtenerTareaPorId as jest.Mock).mockResolvedValueOnce(tareaEjemplo)
+    ;(repo.cambiarEstado as jest.Mock).mockRejectedValueOnce(new Error('DB error'))
+    const res = await request(app).patch('/tareas/uuid-001/estado').send({ estado: 'COMPLETADA' })
+    expect(res.status).toBe(500)
+  })
+})
