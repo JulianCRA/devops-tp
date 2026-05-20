@@ -16,6 +16,10 @@ const sdk = new NodeSDK({
   instrumentations: [getNodeAutoInstrumentations({
     '@opentelemetry/instrumentation-http': {
       ignoreIncomingRequestHook: (req) => req.url?.startsWith('/error/') ?? false,
+      ignoreOutgoingRequestHook: (req) => {
+        const host = (req as { hostname?: string; host?: string }).hostname ?? (req as { host?: string }).host ?? ''
+        return host.includes('grafana.net')
+      },
     },
     '@opentelemetry/instrumentation-winston': {
       disableLogSending: true,
