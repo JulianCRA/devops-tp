@@ -1,6 +1,17 @@
 import { createLogger, transports, format } from 'winston'
 import LokiTransport from 'winston-loki'
 
+// Loki structured metadata requires all values to be strings.
+// winston-loki passes log metadata directly as structured metadata (3rd element in values[]).
+const lokiMeta = format((info) => {
+  for (const key of Object.keys(info)) {
+    if (typeof (info as Record<string, unknown>)[key] === 'number') {
+      (info as Record<string, unknown>)[key] = String((info as Record<string, unknown>)[key])
+    }
+  }
+  return info
+})
+
 const logger = createLogger({
   level: 'info',
   format: format.combine(
@@ -16,7 +27,7 @@ const logger = createLogger({
           labels: { app: 'tareas-api' },
           json: true,
           batching: false,
-          format: format.json(),
+          format: format.combine(lokiMeta(), format.json()),
           gracefulShutdown: false,
           onConnectionError: (err: unknown) => console.error('[loki] connection error:', err),
         })]
