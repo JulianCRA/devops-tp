@@ -15,6 +15,8 @@ const logger = createLogger({
           basicAuth: process.env.LOKI_AUTH,
           labels: { app: 'tareas-api' },
           json: true,
+          batching: false,
+          format: format.json(),
           gracefulShutdown: false,
           onConnectionError: (err: unknown) => console.error('[loki] connection error:', err),
         })]
