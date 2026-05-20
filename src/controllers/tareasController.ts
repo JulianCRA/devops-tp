@@ -213,6 +213,11 @@ export async function eliminarTarea(req: Request, res: Response): Promise<void> 
     logger.info('Tarea eliminada', { status: 204, id })
     res.status(204).send()
   } catch (err) {
+    if ((err as { code?: string }).code === 'P2025') {
+      logger.warn('Tarea no encontrada', { status: 404, id })
+      res.status(404).json({ error: 'Tarea no encontrada' })
+      return
+    }
     logger.error('Error en eliminarTarea', { status: 500, id, error: String(err) })
     res.status(500).json({ error: 'Error interno del servidor' })
   }
