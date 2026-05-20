@@ -18,7 +18,10 @@ const sdk = new NodeSDK({
       ignoreIncomingRequestHook: (req) => req.url?.startsWith('/error/') ?? false,
       ignoreOutgoingRequestHook: (req) => {
         const host = (req as { hostname?: string; host?: string }).hostname ?? (req as { host?: string }).host ?? ''
-        return host.includes('grafana.net')
+        // Ignore the Loki exporter and any self-calls (trigger endpoints and the
+        // traffic simulator both fetch the app itself; those outgoing spans would
+        // make synthetic requests distinguishable from organic ones).
+        return host.includes('grafana.net') || host === 'localhost' || host === '127.0.0.1' || host === '::1'
       },
     },
     '@opentelemetry/instrumentation-winston': {

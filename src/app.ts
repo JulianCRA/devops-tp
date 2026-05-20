@@ -11,11 +11,18 @@ const app = express()
 app.use(express.json())
 
 app.use((req, res, next) => {
+  // Outer trigger requests (/error/*, /trigger, /alerta, /reset) are control-plane,
+  // not real traffic — skip so triggered errors are indistinguishable from organic ones.
+  const route = req.originalUrl.split('?')[0]
+  if (/^\/(error|trigger|alerta|reset)(\/|$)/.test(route)) {
+    next()
+    return
+  }
   res.on('finish', () => {
     const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info'
     logger[level]('http response', {
       method: req.method,
-      route: req.originalUrl.split('?')[0],
+      route,
       status: res.statusCode,
     })
   })
