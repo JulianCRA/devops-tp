@@ -15,7 +15,7 @@ app.use((req, res, next) => {
     const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info'
     logger[level]('http response', {
       method: req.method,
-      route: req.path,
+      route: req.originalUrl.split('?')[0],
       status: res.statusCode,
     })
   })
