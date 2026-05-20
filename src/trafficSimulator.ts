@@ -1,4 +1,5 @@
 import logger from './logger'
+import { context, ROOT_CONTEXT } from '@opentelemetry/api'
 
 const idPool: string[] = []
 let timer: ReturnType<typeof setTimeout> | null = null
@@ -106,9 +107,9 @@ function scheduleNext() {
     // 25% burst (2-5 reqs concurrentes), 75% request única
     if (Math.random() < 0.25) {
       const count = Math.floor(Math.random() * 4) + 2  // 2-5
-      await Promise.all(Array.from({ length: count }, () => tick().catch(() => { /* ignorar */ })))
+      await Promise.all(Array.from({ length: count }, () => context.with(ROOT_CONTEXT, () => tick().catch(() => { /* ignorar */ }))))
     } else {
-      await tick().catch(() => { /* ignorar */ })
+      await context.with(ROOT_CONTEXT, () => tick().catch(() => { /* ignorar */ }))
     }
     scheduleNext()
   }, delay)
