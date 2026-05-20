@@ -3,11 +3,16 @@ import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentation
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http'
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
+import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api'
 
+diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.WARN)
 
 const sdk = new NodeSDK({
   traceExporter: new OTLPTraceExporter(),
-  metricReaders: [new PeriodicExportingMetricReader({ exporter: new OTLPMetricExporter() })],
+  metricReaders: [new PeriodicExportingMetricReader({
+    exporter: new OTLPMetricExporter(),
+    exportIntervalMillis: 10_000,
+  })],
   instrumentations: [getNodeAutoInstrumentations({
     '@opentelemetry/instrumentation-http': {
       ignoreIncomingRequestHook: (req) => req.url?.startsWith('/error/') ?? false,
