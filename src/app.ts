@@ -24,12 +24,12 @@ app.use((req, res, next) => {
 
 /* simular errores 401 y 403 en rutas específicas */
 app.use('/tareas/privada', (_req, res) => {
-  logger.warn('401 No autorizado en /tareas/privada')
+  logger.warn('No autorizado', { status: 401 })
   res.status(401).json({ error: 'No autorizado (401)' })
 })
 
 app.use('/tareas/administrativa', (_req, res) => {
-  logger.warn('403 Prohibido en /tareas/administrativa')
+  logger.warn('Prohibido', { status: 403 })
   res.status(403).json({ error: 'Prohibido (403)' })
 })
 

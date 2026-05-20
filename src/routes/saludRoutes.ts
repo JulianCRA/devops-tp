@@ -9,7 +9,7 @@ router.get('/listo', listo)
 
 /* forzar un error en la ruta de salud para probar el manejo de errores */
 router.get('/salud/error', (_req, res) => {
-  logger.error('Error 500 forzado en /salud/error')
+  logger.error('Error 500 forzado', { status: 500 })
   res.status(500).json({ error: 'Error 500 forzado' })
 })
 

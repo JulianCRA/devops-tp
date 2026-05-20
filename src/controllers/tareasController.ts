@@ -23,10 +23,10 @@ export async function listarTareas(req: Request, res: Response): Promise<void> {
       usuarioAsignado: usuarioAsignado as string | undefined,
     })
 
-    logger.info('Tareas listadas', { total: tareas.length })
+    logger.info('Tareas listadas', { status: 200, total: tareas.length })
     res.status(200).json(tareas)
   } catch (err) {
-    logger.error('Error en listarTareas', { error: String(err) })
+    logger.error('Error en listarTareas', { status: 500, error: String(err) })
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 }
@@ -35,14 +35,14 @@ export async function obtenerTarea(req: Request, res: Response): Promise<void> {
   try {
     const tarea = await repo.obtenerTareaPorId(String(req.params.id))
     if (!tarea) {
-      logger.warn('Tarea no encontrada', { id: req.params.id })
+      logger.warn('Tarea no encontrada', { status: 404, id: req.params.id })
       res.status(404).json({ error: 'Tarea no encontrada' })
       return
     }
-    logger.info('Tarea obtenida', { id: tarea.id })
+    logger.info('Tarea obtenida', { status: 200, id: tarea.id })
     res.status(200).json(tarea)
   } catch (err) {
-    logger.error('Error en obtenerTarea', { error: String(err) })
+    logger.error('Error en obtenerTarea', { status: 500, error: String(err) })
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 }
@@ -52,17 +52,17 @@ export async function crearTarea(req: Request, res: Response): Promise<void> {
     const { titulo, descripcion, usuarioCreador, fechaEntrega, prioridad, usuarioAsignado } = req.body
 
     if (!titulo || typeof titulo !== 'string' || titulo.trim() === '') {
-      logger.warn('crearTarea 400: titulo obligatorio')
+      logger.warn('Campo requerido', { status: 400, campo: 'titulo' })
       res.status(400).json({ error: 'titulo es obligatorio' })
       return
     }
     if (!descripcion || typeof descripcion !== 'string' || descripcion.trim() === '') {
-      logger.warn('crearTarea 400: descripcion obligatoria')
+      logger.warn('Campo requerido', { status: 400, campo: 'descripcion' })
       res.status(400).json({ error: 'descripcion es obligatoria' })
       return
     }
     if (!usuarioCreador || typeof usuarioCreador !== 'string' || usuarioCreador.trim() === '') {
-      logger.warn('crearTarea 400: usuarioCreador obligatorio')
+      logger.warn('Campo requerido', { status: 400, campo: 'usuarioCreador' })
       res.status(400).json({ error: 'usuarioCreador es obligatorio' })
       return
     }
@@ -81,7 +81,7 @@ export async function crearTarea(req: Request, res: Response): Promise<void> {
     }
 
     if (prioridad !== undefined && !PRIORIDADES_VALIDAS.includes(prioridad as Prioridad)) {
-      logger.warn('crearTarea 400: prioridad inválida', { prioridad })
+      logger.warn('Campo inválido', { status: 400, campo: 'prioridad', valor: prioridad })
       res.status(400).json({ error: `prioridad inválida. Valores permitidos: ${PRIORIDADES_VALIDAS.join(', ')}` })
       return
     }
@@ -95,10 +95,10 @@ export async function crearTarea(req: Request, res: Response): Promise<void> {
       usuarioAsignado: usuarioAsignado as string | undefined,
     })
 
-    logger.info('Nueva tarea creada', { titulo: tarea.titulo, id: tarea.id })
+    logger.info('Tarea creada', { status: 201, id: tarea.id, titulo: tarea.titulo })
     res.status(201).json(tarea)
   } catch (err) {
-    logger.error('Error en crearTarea', { error: String(err) })
+    logger.error('Error en crearTarea', { status: 500, error: String(err) })
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 }
@@ -108,7 +108,7 @@ export async function actualizarTarea(req: Request, res: Response): Promise<void
   try {
     const tarea = await repo.obtenerTareaPorId(id)
     if (!tarea) {
-      logger.warn('actualizarTarea 404: tarea no encontrada', { id })
+      logger.warn('Tarea no encontrada', { status: 404, id })
       res.status(404).json({ error: 'Tarea no encontrada' })
       return
     }
@@ -162,10 +162,10 @@ export async function actualizarTarea(req: Request, res: Response): Promise<void
     }
 
     const tareaActualizada = await repo.actualizarTarea(id, datos)
-    logger.info('Tarea modificada', { id })
+    logger.info('Tarea modificada', { status: 200, id })
     res.status(200).json(tareaActualizada)
   } catch (err) {
-    logger.error('Error en actualizarTarea', { id, error: String(err) })
+    logger.error('Error en actualizarTarea', { status: 500, id, error: String(err) })
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 }
@@ -186,16 +186,16 @@ export async function cambiarEstado(req: Request, res: Response): Promise<void> 
 
     const tarea = await repo.obtenerTareaPorId(id)
     if (!tarea) {
-      logger.warn('cambiarEstado 404: tarea no encontrada', { id })
+      logger.warn('Tarea no encontrada', { status: 404, id })
       res.status(404).json({ error: 'Tarea no encontrada' })
       return
     }
 
     const tareaActualizada = await repo.cambiarEstado(id, estado as Estado)
-    logger.info('Tarea cambió estado', { id, estado })
+    logger.info('Tarea cambió estado', { status: 200, id, estado })
     res.status(200).json(tareaActualizada)
   } catch (err) {
-    logger.error('Error en cambiarEstado', { id, error: String(err) })
+    logger.error('Error en cambiarEstado', { status: 500, id, error: String(err) })
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 }
@@ -205,15 +205,15 @@ export async function eliminarTarea(req: Request, res: Response): Promise<void> 
   try {
     const tarea = await repo.obtenerTareaPorId(id)
     if (!tarea) {
-      logger.warn('eliminarTarea 404: tarea no encontrada', { id })
+      logger.warn('Tarea no encontrada', { status: 404, id })
       res.status(404).json({ error: 'Tarea no encontrada' })
       return
     }
     await repo.eliminarTarea(id)
-    logger.info('Tarea eliminada', { id })
+    logger.info('Tarea eliminada', { status: 204, id })
     res.status(204).send()
   } catch (err) {
-    logger.error('Error en eliminarTarea', { id, error: String(err) })
+    logger.error('Error en eliminarTarea', { status: 500, id, error: String(err) })
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 }
