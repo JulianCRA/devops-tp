@@ -10,6 +10,18 @@ const app = express()
 
 app.use(express.json())
 
+app.use((req, res, next) => {
+  res.on('finish', () => {
+    const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info'
+    logger[level]('http response', {
+      method: req.method,
+      route: req.path,
+      status: res.statusCode,
+    })
+  })
+  next()
+})
+
 /* simular errores 401 y 403 en rutas específicas */
 app.use('/tareas/privada', (_req, res) => {
   logger.warn('401 No autorizado en /tareas/privada')
