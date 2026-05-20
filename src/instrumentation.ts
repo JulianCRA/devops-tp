@@ -10,7 +10,11 @@ const sdk = new NodeSDK({
   traceExporter: new OTLPTraceExporter(),
   metricReader: new PeriodicExportingMetricReader({ exporter: new OTLPMetricExporter() }),
   logRecordProcessor: new SimpleLogRecordProcessor(new OTLPLogExporter()),
-  instrumentations: [getNodeAutoInstrumentations()],
+  instrumentations: [getNodeAutoInstrumentations({
+    '@opentelemetry/instrumentation-http': {
+      ignoreIncomingRequestHook: (req) => req.url?.startsWith('/error/') ?? false,
+    },
+  })],
 })
 
 sdk.start()
