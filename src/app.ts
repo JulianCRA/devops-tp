@@ -18,6 +18,11 @@ app.use((req, res, next) => {
     next()
     return
   }
+  // Skip Render's initial HEAD / connectivity probe — not real traffic
+  if (req.method === 'HEAD' && route === '/') {
+    res.sendStatus(200)
+    return
+  }
   res.on('finish', () => {
     const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info'
     logger[level]('http response', {
