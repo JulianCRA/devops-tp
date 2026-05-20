@@ -92,7 +92,7 @@ async function tick() {
     method: req.method ?? 'GET',
     headers: req.body ? json : undefined,
     body: req.body ? JSON.stringify(req.body) : undefined,
-  }).catch(() => { /* ignorar */ })
+  }).then(res => res.body?.cancel()).catch(() => { /* ignorar */ })
 }
 
 // delay aleatorio uniforme entre 1 y 20 segundos
