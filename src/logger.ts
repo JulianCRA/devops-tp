@@ -14,11 +14,15 @@ const lokiMeta = format((info) => {
 
 const logger = createLogger({
   level: 'info',
+  silent: process.env.NODE_ENV === 'test',
   format: format.combine(
     format.timestamp(),
     format.json(),
   ),
-  transports: [
+  // In test mode we silence the logger entirely; transports are omitted so that
+  // Winston does not create internal stream pipelines that keep open async handles
+  // and prevent the Jest worker process from exiting cleanly.
+  transports: process.env.NODE_ENV === 'test' ? [] : [
     new transports.Console(),
     ...(process.env.LOKI_URL
       ? [new LokiTransport({
