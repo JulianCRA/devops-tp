@@ -23,12 +23,17 @@ app.use((req, res, next) => {
     res.sendStatus(200)
     return
   }
+  const startedAt = Date.now()
   res.on('finish', () => {
     const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info'
     logger[level]('http response', {
       method: req.method,
       route,
       status: res.statusCode,
+      duration_ms: Date.now() - startedAt,
+      ip: (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0].trim() ?? req.socket.remoteAddress,
+      user_agent: req.headers['user-agent'],
+      referrer: req.headers['referer'] ?? req.headers['referrer'],
     })
   })
   next()
