@@ -47,8 +47,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - uses: docker/setup-buildx-action@v3
+
       - name: Build de la imagen Docker
-        run: docker build -t tareas-api:ci .
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          cache-to: type=gha,mode=max
 
   publish:
     runs-on: ubuntu-latest
@@ -56,6 +62,8 @@ jobs:
     if: github.ref_name == 'main' || github.ref_type == 'tag'
     steps:
       - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v3
 
       - name: Docker meta
         id: meta
@@ -80,6 +88,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
 
   deploy:
     runs-on: ubuntu-latest
