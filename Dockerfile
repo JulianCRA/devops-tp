@@ -46,8 +46,6 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Crea un grupo y usuario sin privilegios llamado "app".
-# Correr como root dentro del contenedor es un riesgo de seguridad:
-# si la app es comprometida, el atacante tendría acceso root al host.
 RUN apk add --no-cache openssl && addgroup -S app && adduser -S app -G app
 
 # Copia los manifiestos para instalar solo dependencias de producción.
