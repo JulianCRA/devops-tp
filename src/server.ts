@@ -7,6 +7,5 @@ import { version } from '../package.json'
 const PORT = process.env.PORT ?? 3000
 
 app.listen(PORT, () => {
-  logger.info('Servidor corriendo', { port: PORT })
-  console.log(`Version del servidor: ${version}`)
+  logger.info('Servidor corriendo', { port: PORT, version })
 })

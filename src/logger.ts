@@ -12,25 +12,37 @@ const lokiMeta = format((info) => {
   return info
 })
 
+const consoleLine = format.printf((info) => {
+  const { timestamp, level, message, ...meta } = info as Record<string, unknown>
+  const metaKeys = Object.keys(meta).filter((key) => !['service', 'label'].includes(key))
+  const metaText = metaKeys.length === 0
+    ? ''
+    : ` ${metaKeys.map((key) => `${key}=${JSON.stringify(meta[key])}`).join(' ')}`
+
+  return `${String(timestamp)} ${String(level)} ${String(message)}${metaText}`
+})
+
 const logger = createLogger({
   level: 'info',
   silent: process.env.NODE_ENV === 'test',
-  format: format.combine(
-    format.timestamp(),
-    format.json(),
-  ),
+  format: format.combine(format.timestamp()),
   // In test mode we silence the logger entirely; transports are omitted so that
   // Winston does not create internal stream pipelines that keep open async handles
   // and prevent the Jest worker process from exiting cleanly.
   transports: process.env.NODE_ENV === 'test' ? [] : [
-    new transports.Console(),
+    new transports.Console({
+      format: format.combine(
+        format.colorize({ all: true }),
+        consoleLine,
+      ),
+    }),
     ...(process.env.LOKI_URL
       ? [new LokiTransport({
           host: process.env.LOKI_URL,
           basicAuth: process.env.LOKI_AUTH,
           labels: { app: 'tareas-api' },
           json: true,
-          format: format.combine(lokiMeta(), format.json()),
+          format: format.combine(format.timestamp(), lokiMeta(), format.json()),
           gracefulShutdown: false,
           onConnectionError: (err: unknown) => console.error('[loki] connection error:', err),
         })]
