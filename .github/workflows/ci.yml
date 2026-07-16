@@ -4,8 +4,14 @@ on:
   push:
     branches: ['**']
     tags: ['v*']
+    paths-ignore:
+      - '**.md'
+      - 'extra_docs/**'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'extra_docs/**'
 
 jobs:
   test:
