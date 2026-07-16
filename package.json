@@ -1,6 +1,6 @@
 {
   "name": "devops-tp-tareas",
-  "version": "1.5.10",
+  "version": "1.5.11",
   "description": "API REST de manejo de tareas - TP Integrador DevOps",
   "main": "dist/server.js",
   "scripts": {
