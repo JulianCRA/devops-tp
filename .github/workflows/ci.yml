@@ -116,11 +116,15 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
           if [ "${{ github.ref_type }}" = "tag" ]; then
-            VERSION="${{ github.ref_name }}"       
-            VERSION="${VERSION#v}"                  # strip leading 'v'
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
             IMG="docker.io/${DOCKERHUB_USERNAME}/tareas-api:${VERSION}"
-            curl -fsSL "${{ secrets.RENDER_DEPLOY_HOOK_URL }}&imgURL=${IMG}"
           else
-            # main branch → deploy latest as before
-            curl -fsSL "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+            IMG="docker.io/${DOCKERHUB_USERNAME}/tareas-api:latest"
           fi
+
+          curl -fsSL -X POST \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"imageUrl\": \"${IMG}\"}"
