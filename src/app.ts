@@ -5,10 +5,12 @@ import errorRouter from './routes/errorRoutes'
 import * as simulator from './trafficSimulator'
 import { resetDB } from './repositories/tareasRepository'
 import logger from './logger'
+import { latencyMiddleware, getConfig, setConfig } from './latency'
 
 const app = express()
 
 app.use(express.json())
+app.use(latencyMiddleware)
 
 app.use((req, res, next) => {
   // Outer trigger requests (/error/*, /trigger, /alerta, /reset) are control-plane,
@@ -50,14 +52,22 @@ app.use('/tareas/administrativa', (_req, res) => {
   res.status(403).json({ error: 'Prohibido (403)' })
 })
 
-app.post('/trigger', (_req, res) => {
+app.post('/trigger', (req, res) => {
   const port = process.env.PORT ?? 3000
+  const { minMs, maxMs } = req.query
+  if (minMs !== undefined || maxMs !== undefined) {
+    const { delayMin, delayMax } = simulator.getDelay()
+    simulator.setDelay(
+      minMs !== undefined ? Number(minMs) : delayMin,
+      maxMs !== undefined ? Number(maxMs) : delayMax,
+    )
+  }
   if (simulator.isRunning()) {
     simulator.stop()
   } else {
     simulator.start(port)
   }
-  res.json({ simulador: simulator.isRunning() ? 'activo' : 'detenido' })
+  res.json({ simulador: simulator.isRunning() ? 'activo' : 'detenido', ...simulator.getDelay() })
 })
 
 app.use('/', saludRouter)
@@ -75,6 +85,16 @@ app.post('/reset', async (_req, res) => {
   simulator.clearPool()
   logger.warn('Base de datos reseteada', { eliminadas: count })
   res.json({ eliminadas: count })
+})
+
+app.post('/latencia', (req, res) => {
+  const { enabled, minMs, maxMs } = req.query
+  setConfig({
+    ...(enabled !== undefined && { enabled: enabled === 'true' }),
+    ...(minMs !== undefined && { minMs: Number(minMs) }),
+    ...(maxMs !== undefined && { maxMs: Number(maxMs) }),
+  })
+  res.json(getConfig())
 })
 
 export default app

@@ -5,7 +5,7 @@ import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http'
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api'
 
-diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.WARN)
+diag.setLogger(new DiagConsoleLogger(), process.env.NODE_ENV === 'production' ? DiagLogLevel.WARN : DiagLogLevel.NONE)
 
 const sdk = new NodeSDK({
   traceExporter: new OTLPTraceExporter(),

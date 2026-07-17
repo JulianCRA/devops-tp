@@ -5,6 +5,17 @@ const idPool: string[] = []
 let timer: ReturnType<typeof setTimeout> | null = null
 let running = false
 let base = ''
+let delayMin = 1000
+let delayMax = 20000
+
+export function setDelay(min: number, max: number) {
+  delayMin = min
+  delayMax = max
+}
+
+export function getDelay() {
+  return { delayMin, delayMax }
+}
 
 const VERBOS   = ['Implementar', 'Revisar', 'Migrar', 'Documentar', 'Optimizar', 'Refactorizar', 'Desplegar', 'Testear', 'Configurar', 'Analizar']
 const OBJETOS  = ['autenticación', 'pipeline de CI', 'base de datos', 'caché de Redis', 'logs de auditoría', 'API de pagos', 'servicio de emails', 'dashboard de métricas', 'módulo de reportes', 'integración con S3']
@@ -95,9 +106,8 @@ async function tick() {
   }).then(res => res.body?.cancel()).catch(() => { /* ignorar */ })
 }
 
-// delay aleatorio uniforme entre 1 y 20 segundos
 function randomDelay() {
-  return Math.floor(Math.random() * 19000) + 1000
+  return Math.floor(Math.random() * (delayMax - delayMin + 1)) + delayMin
 }
 
 function scheduleNext() {
