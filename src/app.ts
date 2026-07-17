@@ -10,6 +10,13 @@ import { latencyMiddleware, getConfig, setConfig } from './latency'
 const app = express()
 
 app.use(express.json())
+
+// Capture start time before latency middleware so duration_ms includes the fake delay.
+app.use((req, _res, next) => {
+  (req as typeof req & { _startedAt?: number })._startedAt = Date.now()
+  next()
+})
+
 app.use(latencyMiddleware)
 
 app.use((req, res, next) => {
@@ -25,7 +32,7 @@ app.use((req, res, next) => {
     res.sendStatus(200)
     return
   }
-  const startedAt = Date.now()
+  const startedAt = (req as typeof req & { _startedAt?: number })._startedAt ?? Date.now()
   res.on('finish', () => {
     const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info'
     logger[level]('http response', {
