@@ -52,14 +52,22 @@ app.use('/tareas/administrativa', (_req, res) => {
   res.status(403).json({ error: 'Prohibido (403)' })
 })
 
-app.post('/trigger', (_req, res) => {
+app.post('/trigger', (req, res) => {
   const port = process.env.PORT ?? 3000
+  const { minMs, maxMs } = req.query
+  if (minMs !== undefined || maxMs !== undefined) {
+    const { delayMin, delayMax } = simulator.getDelay()
+    simulator.setDelay(
+      minMs !== undefined ? Number(minMs) : delayMin,
+      maxMs !== undefined ? Number(maxMs) : delayMax,
+    )
+  }
   if (simulator.isRunning()) {
     simulator.stop()
   } else {
     simulator.start(port)
   }
-  res.json({ simulador: simulator.isRunning() ? 'activo' : 'detenido' })
+  res.json({ simulador: simulator.isRunning() ? 'activo' : 'detenido', ...simulator.getDelay() })
 })
 
 app.use('/', saludRouter)
