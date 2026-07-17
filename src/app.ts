@@ -5,10 +5,12 @@ import errorRouter from './routes/errorRoutes'
 import * as simulator from './trafficSimulator'
 import { resetDB } from './repositories/tareasRepository'
 import logger from './logger'
+import { latencyMiddleware, getConfig, setConfig } from './latency'
 
 const app = express()
 
 app.use(express.json())
+app.use(latencyMiddleware)
 
 app.use((req, res, next) => {
   // Outer trigger requests (/error/*, /trigger, /alerta, /reset) are control-plane,
@@ -75,6 +77,16 @@ app.post('/reset', async (_req, res) => {
   simulator.clearPool()
   logger.warn('Base de datos reseteada', { eliminadas: count })
   res.json({ eliminadas: count })
+})
+
+app.post('/latencia', (req, res) => {
+  const { enabled, minMs, maxMs } = req.query
+  setConfig({
+    ...(enabled !== undefined && { enabled: enabled === 'true' }),
+    ...(minMs !== undefined && { minMs: Number(minMs) }),
+    ...(maxMs !== undefined && { maxMs: Number(maxMs) }),
+  })
+  res.json(getConfig())
 })
 
 export default app
